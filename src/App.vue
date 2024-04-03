@@ -11,7 +11,6 @@
         :key="questionnaire.id"
         :questionnaire="questionnaire"
         @remove="removeQuestionnaire"
-        @edit="editQuestionnaire"
         @save="saveQuestionnaire"
       />
     </ul>
@@ -21,8 +20,6 @@
 <script>
 import QuestionnaireItem from './components/QuestionnaireItem.vue';
 
-// donne à chaque questionnaire un id unique
-let questionnaireId = 0;
 
 export default {
   components: {
@@ -35,6 +32,10 @@ export default {
     }
   },
   async mounted() {
+    await this.getQuestionnaires();
+  },
+  methods: {
+    async getQuestionnaires() {
       try {
         const response = await fetch('http://127.0.0.1:5000/questionnaires');
         const data = await response.json();
@@ -43,24 +44,54 @@ export default {
       } catch (error) {
         console.error('Erreur lors de la récupération des questionnaires:', error);
       }
-  },
-  methods: {
-    addQuestionnaire() {
-      this.questionnaires.push({
-        id: questionnaireId++,
-        name: this.newQuestionnaire,
-        questions: []
-      });
-      this.newQuestionnaire = '';
     },
-    removeQuestionnaire(questionnaire) {
-      this.questionnaires = this.questionnaires.filter(q => q !== questionnaire);
+
+    async addQuestionnaire() {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/questionnaires', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: this.newQuestionnaire
+          })
+        });
+        const data = await response.json();
+        console.log(data);
+        await this.getQuestionnaires();
+        this.newQuestionnaire = '';
+      } catch (error) {
+        console.error('Erreur lors de l\'ajout du questionnaire:', error);
+      };
     },
-    editQuestionnaire(questionnaire) {
-      questionnaire.editing = true;
+    async removeQuestionnaire(questionnaire) {
+      try {
+        await fetch(`http://127.0.0.1:5000/questionnaires/${questionnaire.id}`, {
+          method: 'DELETE'
+        });
+        await this.getQuestionnaires();
+      } catch (error) {
+        console.error('Erreur lors de la suppression du questionnaire:', error);
+      }
+
     },
-    saveQuestionnaire(questionnaire) {
-      questionnaire.editing = false;
+    async saveQuestionnaire(questionnaire) {
+      console.log(questionnaire);
+      try {
+        await fetch(`http://127.0.0.1:5000/questionnaires/${questionnaire.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: questionnaire.name
+          })
+        });
+        await this.getQuestionnaires();
+      } catch (error) {
+        console.error('Erreur lors de la sauvegarde du questionnaire:', error);
+      }
     }
   }
 }

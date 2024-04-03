@@ -1,11 +1,12 @@
 <template>
   <li>
     <div v-if="!question.editing">
-      {{ question.text }}
+      {{ question.title }} - {{ question.questionType }}
       <button @click="editQuestion">Editer</button>
     </div>
     <div v-else>
-      <input v-model="question.text" required>
+      <input v-model="question.title" required>
+      <input v-model="question.questionType" required>
       <button @click="saveQuestion">Enregistrer</button>
     </div>
     <button @click="removeQuestion">Supprimer</button>
@@ -20,7 +21,7 @@ export default {
       this.$emit('remove', this.question);
     },
     editQuestion() {
-      this.$emit('edit', this.question);
+      this.question.editing = true;
     },
     saveQuestion() {
       this.$emit('save', this.question);
