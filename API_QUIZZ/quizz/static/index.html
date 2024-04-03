@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application de Quiz</title>
+    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Application de Quiz</h1>
+    <div>
+        <h2 id="title"></h2>
+        <div id="main"></div>
+    </div>
+    
+    <script>
+        function clearElement(element) {
+            while (element.firstChild) {
+                element.removeChild(element.firstChild);
+            }
+        }
+
+        function fetchQuestionnaires() {
+            fetch('/questionnaires')
+                .then(response => response.json())
+                .then(questionnaires => {
+                    const title = document.getElementById('title');
+                    const main = document.getElementById('main');
+                    title.textContent = 'Questionnaires';
+                    clearElement(main);
+                    questionnaires.forEach(questionnaire => {
+                        const questionnaireElement = document.createElement('div');
+                        questionnaireElement.innerHTML = `<h3>${questionnaire.name}</h3>`;
+                        questionnaireElement.innerHTML += `<button onclick="fetchQuestions(${questionnaire.id})">Voir les questions</button>`;
+                        questionnaireElement.innerHTML += `<button onclick="updateQuestionnaire(${questionnaire.id})">Modifier</button>`;
+                        questionnaireElement.innerHTML += `<button onclick="deleteQuestionnaire(${questionnaire.id})">Supprimer</button>`;
+                        main.appendChild(questionnaireElement);
+                    });
+                    main.innerHTML += `<hr>`;
+                    main.innerHTML += '<button onclick="createQuestionnaire()">Créer</button>';
+                })
+                .catch(error => console.error('Erreur lors de la récupération des questionnaires:', error));
+        }
+
+        function createQuestionnaire() {
+            const name = prompt('Entrez le nom du questionnaire :');
+            if (name) {
+                fetch('/questionnaires', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: name })
+                })
+                .then(() => fetchQuestionnaires())
+                .catch(error => console.error('Erreur lors de la création du questionnaire :', error));
+            }
+        }
+
+        function updateQuestionnaire(questionnaireId) {
+            const name = prompt('Entrez le nouveau nom pour le questionnaire :');
+            if (name) {
+                fetch(`/questionnaires/${questionnaireId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: name })
+                })
+                .then(() => fetchQuestionnaires())
+                .catch(error => console.error('Erreur lors de la mise à jour du questionnaire :', error));
+            }
+        }
+
+        function deleteQuestionnaire(questionnaireId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce questionnaire ?')) {
+                fetch(`/questionnaires/${questionnaireId}`, {
+                    method: 'DELETE'
+                })
+                .then(() => fetchQuestionnaires())
+                .catch(error => console.error('Erreur lors de la suppression du questionnaire :', error));
+            }
+        }
+
+        function fetchQuestions() {
+            fetch('/questions')
+                .then(response => response.json())
+                .then(questions => {
+                    const main = document.getElementById('main');
+                    const title = document.getElementById('title');
+                    title.textContent = 'Questions';
+                    clearElement(questionList);
+                    if (questions.length === 0) {
+                        main.innerHTML = '<p>Aucune question trouvée</p>';
+                        return;
+                    }
+                    questions.forEach(question => {
+                        const questionElement = document.createElement('div');
+                        questionElement.innerHTML = `<h3>${question.title}</h3>`;
+                        questionElement.innerHTML += `<button onclick="updateQuestion(${question.id})">Mettre à jour</button>`;
+                        questionElement.innerHTML += `<button onclick="deleteQuestion(${question.id})">Supprimer</button>`;
+                        main.appendChild(questionElement);
+                    });
+
+                    
+                })
+                .catch(error => console.error('Error fetching questions:', error));
+        }
+
+        function fetchQuestions(questionnaireId) {
+            fetch(`/questions/questionnaire/${questionnaireId}`)
+                .then(response => response.json())
+                .then(questions => {
+                    const main = document.getElementById('main');
+                    const title = document.getElementById('title');
+                    title.textContent = 'Questions';
+                    clearElement(main);
+                    if (questions.length === 0) {
+                        main.innerHTML = '<p>Aucune question trouvée</p>';
+                    }
+                    questions.forEach(question => {
+                        const questionElement = document.createElement('div');
+                        questionElement.innerHTML = `<h3>${question.title}</h3>`;
+                        questionElement.innerHTML += `<p>${question.questionType}</p>`;
+                        questionElement.innerHTML += `<button onclick="updateQuestion(${question.id},${questionnaireId})">Mettre à jour</button>`;
+                        questionElement.innerHTML += `<button onclick="deleteQuestion(${question.id},${questionnaireId})">Supprimer</button>`;
+                        main.appendChild(questionElement);
+                    });
+                    
+                    main.innerHTML += `<hr>`;
+                    main.innerHTML += `<button onclick="createQuestion(${questionnaireId})">Créer</button>`;
+                    main.innerHTML += '<button onclick="fetchQuestionnaires()">Retour</button>';
+                })
+                .catch(error => console.error('Erreur lors de la récupération des questions :', error));
+        }
+
+        function createQuestion() {
+            const title = prompt('Entrez le titre de la question :');
+            const questionType = prompt('Entrez le type de la question :');
+            const questionnaireId = parseInt(prompt('Entrez l\'identifiant du questionnaire :'));
+            if (title && questionType && questionnaireId) {
+                fetch('/questions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ title: title, questionType: questionType, questionnaire_id: questionnaireId })
+                })
+                .then(() => fetchQuestions())
+                .catch(error => console.error('Erreur lors de la création de la question :', error));
+            }
+        }
+
+        function createQuestion(questionnaireId) {
+            const title = prompt('Entrez le titre de la question :');
+            const questionType = prompt('Entrez le type de la question :');
+            if (title && questionType) {
+                fetch('/questions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ title: title, questionType: questionType, questionnaire_id: questionnaireId })
+                })
+                .then(() => fetchQuestions(questionnaireId))
+                .catch(error => console.error('Erreur lors de la création de la question :', error));
+            }
+        }
+        
+
+        function updateQuestion(questionId) {
+            const title = prompt('Entrez le nouveau titre pour la question :');
+            const questionType = prompt('Entrez le nouveau type pour la question :');
+            const questionnaireId = parseInt(prompt('Entrez le nouvel identifiant du questionnaire :'));
+            if (title && questionType && questionnaireId) {
+                fetch(`/questions/${questionId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ title: title, questionType: questionType, questionnaire_id: questionnaireId })
+                })
+                .then(() => fetchQuestions())
+                .catch(error => console.error('Erreur lors de la mise à jour de la question :', error));
+            }
+        }
+
+        function updateQuestion(questionId, questionnaireId) {
+            const title = prompt('Entrez le nouveau titre pour la question :');
+            const questionType = prompt('Entrez le nouveau type pour la question :');
+            if (title && questionType) {
+                fetch(`/questions/${questionId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ title: title, questionType: questionType, questionnaire_id: questionnaireId })
+                })
+                .then(() => fetchQuestions(questionnaireId))
+                .catch(error => console.error('Erreur lors de la mise à jour de la question :', error));
+            }
+        }
+
+        function deleteQuestion(questionId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette question ?')) {
+                fetch(`/questions/${questionId}`, {
+                    method: 'DELETE'
+                })
+                .then(() => fetchQuestions())
+                .catch(error => console.error('Erreur lors de la suppression de la question :', error));
+            }
+        }
+
+        function deleteQuestion(questionId, questionnaireId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette question ?')) {
+                fetch(`/questions/${questionId}`, {
+                    method: 'DELETE'
+                })
+                .then(() => fetchQuestions(questionnaireId))
+                .catch(error => console.error('Erreur lors de la suppression de la question :', error));
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchQuestionnaires();
+        });
+    </script>
+</body>
+</html>
