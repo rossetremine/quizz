@@ -1,10 +1,12 @@
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api, Resource, reqparse
+from flask_cors import CORS
 
 
 app = Flask( __name__ )
 
+cors = CORS(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///quizz.db'
 app.config['SECRET_KEY'] = 'iMQWPgaEP2WQQUxPvKiYiZoP5jaP5RdzGoE4msqtGFTJgSVKTwVH3SEUGsjRRTkFZMKqXKmCsAaEWbdjWJEb8ip2rNi4hCKezTxe5VVXfiAgDfYzdLRAEqf3dou8gGwr'

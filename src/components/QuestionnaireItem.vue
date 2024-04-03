@@ -41,15 +41,6 @@
         newQuestionText: ''
       }
     },
-    async mounted() {
-      try {
-        const response = await fetch('http://127.0.0.1:5000/questionnaires');
-        const data = await response.json();
-        this.questionnaires = data;
-      } catch (error) {
-        console.error('Erreur lors de la récupération des questionnaires:', error);
-      }
-    },
     methods: {
       async addQuestionnaire() {
       try {
