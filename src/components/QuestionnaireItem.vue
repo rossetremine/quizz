@@ -9,7 +9,7 @@
         <button @click="saveQuestionnaire">Enregistrer</button>
       </div>
       <button @click="removeQuestionnaire">Supprimer</button>
-      <h3>Questions</h3>
+      <h5>Questions</h5>
       <ul>
         <question-item
           v-for="question in questions"
@@ -85,16 +85,19 @@
           });
           const data = await response.json();
           console.log(data);
+          this.newQuestionTitle = '';
+          this.newQuestionType = '';
           await this.getQuestions();
-          this.newQuestionText = '';
+
         } catch (error) {
           console.error('Erreur lors de l\'ajout de la question:', error);
         }
       },
 
       async removeQuestion(question) {
+        console.log(question);
         try {
-          await fetch(`http://127.0/0.1:5000/questions/${question.id}`, {
+          await fetch(`http://127.0.0.1:5000/questions/${question.id}`, {
             method: 'DELETE'
           });
           await this.getQuestions();
@@ -102,6 +105,25 @@
           console.error('Erreur lors de la suppression de la question:', error);
         }
       },
+
+      async saveQuestion(question) {
+        console.log(question);
+        try {
+          await fetch(`http://127.0.0.1:5000/questions/${question.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              title: question.title,
+              questionType: question.questionType
+            })
+          });
+          await this.getQuestions();
+        } catch (error) {
+          console.error('Erreur lors de la sauvegarde de la question:', error);
+        }
+      }
 
       
   }
